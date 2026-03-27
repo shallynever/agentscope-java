@@ -18,6 +18,11 @@ server:
 spring:
   application:
     name: hitl-chat
+  datasource:
+    url: jdbc:mysql://localhost:3306?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useAffectedRows=true
+    username: root
+    password: 1234qwer
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
 # DashScope API configuration
 # Set DASHSCOPE_API_KEY environment variable or configure here

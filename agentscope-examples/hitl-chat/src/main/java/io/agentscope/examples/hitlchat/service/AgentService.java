@@ -31,6 +31,9 @@ import io.agentscope.core.message.ToolUseBlock;
 import io.agentscope.core.model.DashScopeChatModel;
 import io.agentscope.core.session.InMemorySession;
 import io.agentscope.core.session.Session;
+import io.agentscope.core.skill.AgentSkill;
+import io.agentscope.core.skill.SkillBox;
+import io.agentscope.core.skill.repository.ClasspathSkillRepository;
 import io.agentscope.core.state.SessionKey;
 import io.agentscope.core.state.SimpleSessionKey;
 import io.agentscope.core.tool.Toolkit;
@@ -40,13 +43,17 @@ import io.agentscope.examples.hitlchat.dto.ChatEvent.PendingToolCall;
 import io.agentscope.examples.hitlchat.dto.ToolConfirmRequest.ToolCallInfo;
 import io.agentscope.examples.hitlchat.hook.ToolConfirmationHook;
 import io.agentscope.examples.hitlchat.tools.BuiltinTools;
+import io.agentscope.examples.hitlchat.tools.MetricAnalysisTools;
 import jakarta.annotation.PostConstruct;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -63,7 +70,7 @@ public class AgentService {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    @Value("${dashscope.api-key:${DASHSCOPE_API_KEY:}}")
+    @Value("${DASHSCOPE_API_KEY}")
     private String apiKey;
 
     @Value("${dashscope.model-name:qwen-plus}")
@@ -73,14 +80,22 @@ public class AgentService {
     private Toolkit sharedToolkit;
     private ToolConfirmationHook confirmationHook;
 
-    /** Session storage for agent state persistence. */
+    /**
+     * Session storage for agent state persistence.
+     */
     private final Session session = new InMemorySession();
 
-    /** Cache for running agents, keyed by sessionId. Cleared after request completes. */
+    private final ClasspathSkillRepository classpathSkillRepository;
+
+    /**
+     * Cache for running agents, keyed by sessionId. Cleared after request completes.
+     */
     private final ConcurrentHashMap<String, ReActAgent> runningAgents = new ConcurrentHashMap<>();
 
-    public AgentService(McpService mcpService) {
+    public AgentService(McpService mcpService) throws IOException {
         this.mcpService = mcpService;
+        this.classpathSkillRepository = new ClasspathSkillRepository("skills");
+        ;
     }
 
     @PostConstruct
@@ -88,6 +103,7 @@ public class AgentService {
         sharedToolkit = new Toolkit();
         sharedToolkit.registerTool(new BuiltinTools());
         sharedToolkit.registerTool(new ReadFileTool());
+        sharedToolkit.registerTool(new MetricAnalysisTools());
         Set<String> defaultDangerousTools = new HashSet<>();
         defaultDangerousTools.add("view_text_file");
         defaultDangerousTools.add("list_directory");
@@ -111,6 +127,11 @@ public class AgentService {
      */
     private ReActAgent createAgent(String sessionId) {
         Toolkit sessionToolkit = sharedToolkit.copy();
+        SkillBox skillBox = new SkillBox(sessionToolkit);
+        List<AgentSkill> skills = classpathSkillRepository.getAllSkills();
+        for (AgentSkill skill : skills) {
+            skillBox.registration().skill(skill).apply();
+        }
         ReActAgent agent =
                 ReActAgent.builder()
                         .name("Assistant")
@@ -126,6 +147,7 @@ public class AgentService {
                                         .formatter(new DashScopeChatFormatter())
                                         .build())
                         .toolkit(sessionToolkit)
+                        .skillBox(skillBox)
                         .memory(new InMemoryMemory())
                         .hook(confirmationHook)
                         .build();
@@ -305,7 +327,8 @@ public class AgentService {
                     events.add(ChatEvent.text(text, false));
                 }
             }
-            default -> {}
+            default -> {
+            }
         }
         return Flux.fromIterable(events);
     }
@@ -345,7 +368,8 @@ public class AgentService {
             return (Map<String, Object>) input;
         }
         try {
-            return OBJECT_MAPPER.convertValue(input, new TypeReference<Map<String, Object>>() {});
+            return OBJECT_MAPPER.convertValue(input, new TypeReference<Map<String, Object>>() {
+            });
         } catch (Exception e) {
             return Map.of("value", input.toString());
         }

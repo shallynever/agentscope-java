@@ -33,5 +33,7 @@ dashscope:
 # Logging
 logging:
   level:
-    io.agentscope: INFO
+    io.agentscope: DEBUG
     io.agentscope.examples: DEBUG
+  file:
+    path: logs

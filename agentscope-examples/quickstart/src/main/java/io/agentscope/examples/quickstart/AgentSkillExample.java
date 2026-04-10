@@ -26,6 +26,8 @@ import io.agentscope.core.tool.Toolkit;
 import io.agentscope.core.tool.coding.ShellCommandTool;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -45,8 +47,7 @@ public class AgentSkillExample {
     private static final String SKILL_NAME = "skill-creator";
     private static final String RESOURCES_DIR =
             "agentscope-examples/quickstart/src/main/resources/skills";
-    private static final String OUTPUT_DIR = "agentscope-examples/quickstart/target/skill-output";
-
+    private static final String OUTPUT_DIR = "agentscope-examples/quickstart/myskill";
     public static void main(String[] args) throws Exception {
         ExampleUtils.printWelcome(
                 "Agent Skill Example - Skill Creator",
@@ -64,7 +65,7 @@ public class AgentSkillExample {
         AgentSkill skillCreator = loadSkillCreatorSkill();
         skillBox.registration().skill(skillCreator).apply();
 
-        Path outputDir = resolvePath(OUTPUT_DIR);
+        Path outputDir = resolvePath(OUTPUT_DIR+"/"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         Scanner scanner = new Scanner(System.in);
         ShellCommandTool shellCommandTool =
                 new ShellCommandTool(
@@ -91,7 +92,7 @@ public class AgentSkillExample {
                         .model(
                                 DashScopeChatModel.builder()
                                         .apiKey(apiKey)
-                                        .modelName("qwen-max")
+                                        .modelName("qwen-plus")
                                         .stream(true)
                                         .enableThinking(true)
                                         .formatter(new DashScopeChatFormatter())

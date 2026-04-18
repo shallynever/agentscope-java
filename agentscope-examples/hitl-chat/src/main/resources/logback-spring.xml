@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Define log pattern -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <!-- Console appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Main application log file with daily rolling -->
+    <appender name="MAIN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/spring.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/spring-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- DashScopeHttpClient separate log file with daily rolling -->
+    <appender name="DASHSCOPE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/log-agent-scope.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/log-agent-scope-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- DashScopeHttpClient logger: DEBUG level to separate file -->
+    <logger name="io.agentscope.core.model.DashScopeHttpClient" level="DEBUG" additivity="true">
+        <appender-ref ref="DASHSCOPE_FILE"/>
+    </logger>
+
+    <!-- Application loggers (inherit from root) -->
+    <logger name="io.agentscope" level="ERROR"/>
+    <logger name="io.agentscope.examples" level="ERROR"/>
+
+    <!-- Root logger -->
+    <root level="ERROR">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="MAIN_FILE"/>
+    </root>
+</configuration>

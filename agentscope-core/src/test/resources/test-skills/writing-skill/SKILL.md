@@ -1,6 +1,7 @@
 ---
 name: writing-skill
 description: A skill for writing and content creation
+version: 1.0.0
 ---
 # Writing Skill
 

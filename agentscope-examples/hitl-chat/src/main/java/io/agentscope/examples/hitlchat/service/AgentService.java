@@ -143,7 +143,7 @@ public class AgentService {
                                         .apiKey(apiKey)
                                         .modelName(modelName)
                                         .stream(true)
-                                        .enableThinking(false)
+                                        .enableThinking(true)
                                         .formatter(new DashScopeChatFormatter())
                                         .build())
                         .toolkit(sessionToolkit)

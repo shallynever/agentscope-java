@@ -30,10 +30,4 @@ dashscope:
   api-key: ${DASHSCOPE_API_KEY}
   model-name: qwen-plus
 
-# Logging
-logging:
-  level:
-    io.agentscope: DEBUG
-    io.agentscope.examples: DEBUG
-  file:
-    path: logs
+# Logging configuration is managed by logback-spring.xml
